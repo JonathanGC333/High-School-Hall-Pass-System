@@ -1,0 +1,382 @@
+# keyboard imports
+import tkinter as tk
+from tkinter import ttk
+from tkinter import *
+# google sheets imports
+from oauth2client.service_account import ServiceAccountCredentials
+import gspread
+# date and time imports
+from datetime import *
+# terminal imports
+import os
+# discord import
+import requests
+
+# keyboard set up
+key = tk.Tk()
+key.title('Keyboard')
+key.geometry('800x480')
+key.maxsize(width=800, height=480)
+key.minsize(width=800, height=480)
+style = ttk.Style()
+key.configure(bg="#f0f0f0")
+style.configure("TButton", background="white", foreground="black", font=('Helvetica', 9))
+equation = tk.StringVar()
+# makes frames
+framekey = Frame(key)
+frameloc = Frame(key)
+# makes keyboard entry
+Dis_entry = ttk.Entry(framekey, font=('Helvetica', 20), state='readonly', textvariable=equation)
+Dis_entry.grid(rowspan=1, columnspan=100, ipadx=999, ipady=72)
+exp = ""
+equation.set("\t      Please Enter Your HCPSS Username")
+
+
+# google sheets set up
+scope = ('https://www.googleapis.com/auth/spreadsheets', "https://www.googleapis.com/auth/drive.file",
+         "https://www.googleapis.com/auth/drive")
+creds = ServiceAccountCredentials.from_json_keyfile_name("C:\\Users\\jzgc3\\Desktop\\JN2M.json", scope) # change path
+client = gspread.authorize(creds)
+JN2M = client.open("JN2M").sheet1
+
+
+# room number input
+room_num = 'false'
+
+if room_num == 'false':
+    equation.set("\t  Please Enter Your Classrooms Room Number")
+
+
+# keyboard functions
+def press(num):  # when any character key is pressed
+    global exp
+    exp = exp + str(num)
+    equation.set(exp)
+
+
+def Backspace():  # when the backspace key is pressed
+    global exp
+    exp = exp[:-1]
+    equation.set(exp)
+
+
+def Clear():  # when the clear key is pressed. This will clear all the text we would have typed.
+    global exp
+    exp = ""
+    equation.set(exp)
+    back_func()
+
+def user2name(name):
+    first_name = open("C:\\Users\\jzgc3\\Desktop\\firstnames.txt", "r") # copy path
+    first_list = first_name.read()
+    firstn = first_list.split(",\n")
+    first_name.close()
+    last_name = open("C:\\Users\\jzgc3\\Desktop\\lastnames.txt", "r") # copy path
+    last_list = last_name.read()
+    lastn = last_list.split(",\n")
+    last_name.close()
+    global first
+    global last
+    global name_var
+    name_var = 0
+    name_check = "false"
+    while name_check == "false":
+        if name == username_list[name_var]:
+            first = firstn[name_var]
+            last = lastn[name_var]
+            name_check = "true"
+        else:
+            name_var = name_var + 1
+
+
+lock_var = "on"
+def action():  # when the enter key is clicked.
+    name = (Dis_entry.get())
+    """
+    if name == "help":
+        text = (f"Room {room_num} needs help")
+        payload = {
+            'content': text
+        }
+        header = {
+            'authorization': "OTYwOTY4MTMxOTMxNjkzMTE2.YkyJ1Q.FJSnqmH9bDIVtk0J9idQK-AeiLs"
+        }
+        r = requests.post(' https://discord.com/api/v8/channels/961000033652719626/messages', data=payload,
+                          headers=header) # group chat id: 961000033652719626, server id: 905469937177464895
+    """
+    global room_num
+    if room_num == 'false':
+        room_num = name
+        check = room_num.isnumeric()
+        if check == True:
+            back_func()
+            return
+        else:
+            room_num = 'false'
+            Clear()
+            equation.set("\t  Please Enter Your Classrooms Room Number")
+            return
+    global lock_var
+    if name == "lockoff":
+        lock_var = "off"
+        back_func()
+    elif name == "lockon":
+        lock_var = "on"
+        back_func()
+    else:
+        if lock_var == "on":
+            global username_list
+            database_list = open("C:\\Users\\jzgc3\\Desktop\\UserID.txt", "r") # copy path
+            usernames = database_list.read()
+            username_list = usernames.split(",\n")
+            database_list.close()
+            username = name
+            list_num = (len(username_list))
+            database_variable = 0
+            while database_variable < list_num:
+                if username == username_list[database_variable]:
+                    user2name(name)
+                    database_variable = list_num
+                    loc_func("none", 1, first, last)
+                    global exp
+                    exp = ""
+                    equation.set(exp)
+                    framekey.forget()
+                    frameloc.pack()
+                else:
+                    database_variable = database_variable + 1
+                    if database_variable == list_num:
+                        exp = ""
+                        equation.set(exp)
+                        equation.set("     Incorrect Username, Please Enter Your HCPSS Username")
+        if lock_var == "off":
+            loc_func("none", 1, name, "")
+            exp = ""
+            equation.set(exp)
+            framekey.forget()
+            frameloc.pack()
+
+
+def txt(loc, var, first, last):    # txt function
+    if var == 1:
+        f = open("C:\\Users\\jzgc3\\Desktop\\print text.txt", "w") # change path
+        f.write("     SpeedPass      \n")
+        f.write("--------------------\n")
+        f.write(f"Full Name: ")
+        fnchar = len(first)
+        lnchar = len(last)
+        if fnchar + lnchar <= 20:
+            f.write(f"\n{first} {last}\n")
+        if fnchar + lnchar > 20:
+            f.write(f"\n{first}\n{last}\n")
+        f.close()
+    if var == 0:
+        with open("C:\\Users\\jzgc3\\Desktop\\print text.txt") as f: # change path
+            contents_name = f.read()
+        f = open("C:\\Users\\jzgc3\\Desktop\\print text.txt", "w") # change path
+        f.write(contents_name)
+        f.write(f"Destination: {loc}\n")
+        f.write(f"Time: {time}\n")
+        f.write(f"Date: {date1}\n")
+        f.write(f"Classroom Number: {room_num}\n")
+        f.write("--------------------")
+        f.close()
+        # os.system("lp /home/pi/Desktop/PrintDataV2")
+
+# location/final function
+r = 2
+
+
+def loc_func(loc, var, first, last):
+    global r
+    if var == 1:
+        JN2M.update_cell(r, 1, first)
+        JN2M.update_cell(r, 2, last)
+        txt(loc, var, first, last)
+    if var == 0:
+        frameloc.forget()
+        framekey.pack()
+        JN2M.update_cell(r, 3, loc)
+        equation.set("\t      Please Enter Your HCPSS Username")
+        datetimerun()
+        datetimeprint(r)
+        JN2M.update_cell(r, 6, room_num)
+        JN2M.insert_row(values=[], index=2)
+        txt(loc, var, first, last)
+
+
+
+# datetime
+def datetimerun():
+    global date1
+    global time
+    now = datetime.now()
+    hour = int(now.strftime('%H'))
+    minute = int(now.strftime('%M'))
+    if hour > 12:
+        hour = hour - 12
+    time = (f"{hour}:{minute}")
+    today = date.today()
+    date1 = today.strftime("%B %d, %Y")
+
+
+def datetimeprint(r):
+    global date1
+    global time
+    JN2M.update_cell(r, 4, date1)
+    JN2M.update_cell(r, 5, time)
+
+
+# back button
+def back_func():
+    frameloc.forget()
+    framekey.pack()
+    global exp
+    exp = ""
+    equation.set(exp)
+    equation.set("\t      Please Enter Your HCPSS Username")
+
+
+# location commands
+def click2():  # bathroom button
+    loc_func('Bathroom', 0, "ignore", "ignore")
+
+
+def click3():  # media button
+    loc_func('Media', 0, "ignore", "ignore")
+
+
+def click4():  # office button
+    loc_func('Office', 0, "ignore", "ignore")
+
+
+def click5():  # nurse button
+    loc_func('Nurse', 0, "ignore", "ignore")
+
+
+def click6():  # counselor button
+    loc_func('Counselor', 0, "ignore", "ignore")
+
+
+def click7():  # other button
+    loc_func('Other', 0, "ignore", "ignore")
+
+
+def click8():  # back button
+    back_func()
+
+
+# keyboard display
+def display():
+    # Adding keys line wise
+    # First Line Button
+    num1 = ttk.Button(framekey, text='\n1\n', width=6, command=lambda: press('1'))
+    num1.grid(row=1, column=0, ipadx=6, ipady=10, sticky="nsew")
+    num2 = ttk.Button(framekey, text='\n2\n', width=6, command=lambda: press('2'))
+    num2.grid(row=1, column=1, ipadx=6, ipady=10, sticky="nsew")
+    num3 = ttk.Button(framekey, text='\n3\n', width=6, command=lambda: press('3'))
+    num3.grid(row=1, column=2, ipadx=6, ipady=10, sticky="nsew")
+    num4 = ttk.Button(framekey, text='\n4\n', width=6, command=lambda: press('4'))
+    num4.grid(row=1, column=3, ipadx=6, ipady=10, sticky="nsew")
+    num5 = ttk.Button(framekey, text='\n5\n', width=6, command=lambda: press('5'))
+    num5.grid(row=1, column=4, ipadx=6, ipady=10, sticky="nsew")
+    num6 = ttk.Button(framekey, text='\n6\n', width=6, command=lambda: press('6'))
+    num6.grid(row=1, column=5, ipadx=6, ipady=10, sticky="nsew")
+    num7 = ttk.Button(framekey, text='\n7\n', width=6, command=lambda: press('7'))
+    num7.grid(row=1, column=6, ipadx=6, ipady=10, sticky="nsew")
+    num8 = ttk.Button(framekey, text='\n8\n', width=6, command=lambda: press('8'))
+    num8.grid(row=1, column=7, ipadx=6, ipady=10, sticky="nsew")
+    num9 = ttk.Button(framekey, text='\n9\n', width=6, command=lambda: press('9'))
+    num9.grid(row=1, column=8, ipadx=6, ipady=10, sticky="nsew")
+    num0 = ttk.Button(framekey, text='\n0\n', width=6, command=lambda: press('0'))
+    num0.grid(row=1, column=9, ipadx=6, ipady=10, sticky="nsew")
+    # Second Line Buttons
+    Q = ttk.Button(framekey, text='\nQ\n', width=6, command=lambda: press('q'))
+    Q.grid(row=2, column=0, ipadx=6, ipady=10, sticky="nsew")
+    W = ttk.Button(framekey, text='\nW\n', width=6, command=lambda: press('w'))
+    W.grid(row=2, column=1, ipadx=6, ipady=10, sticky="nsew")
+    E = ttk.Button(framekey, text='\nE\n', width=6, command=lambda: press('e'))
+    E.grid(row=2, column=2, ipadx=6, ipady=10, sticky="nsew")
+    R = ttk.Button(framekey, text='\nR\n', width=6, command=lambda: press('r'))
+    R.grid(row=2, column=3, ipadx=6, ipady=10, sticky="nsew")
+    T = ttk.Button(framekey, text='\nT\n', width=6, command=lambda: press('t'))
+    T.grid(row=2, column=4, ipadx=6, ipady=10, sticky="nsew")
+    Y = ttk.Button(framekey, text='\nY\n', width=6, command=lambda: press('y'))
+    Y.grid(row=2, column=5, ipadx=6, ipady=10, sticky="nsew")
+    U = ttk.Button(framekey, text='\nU\n', width=6, command=lambda: press('u'))
+    U.grid(row=2, column=6, ipadx=6, ipady=10, sticky="nsew")
+    I = ttk.Button(framekey, text='\nI\n', width=6, command=lambda: press('i'))
+    I.grid(row=2, column=7, ipadx=6, ipady=10, sticky="nsew")
+    O = ttk.Button(framekey, text='\nO\n', width=6, command=lambda: press('o'))
+    O.grid(row=2, column=8, ipadx=6, ipady=10, sticky="nsew")
+    P = ttk.Button(framekey, text='\nP\n', width=6, command=lambda: press('p'))
+    P.grid(row=2, column=9, ipadx=6, ipady=10, sticky="nsew")
+    # Third Line Buttons
+    A = ttk.Button(framekey, text='\nA\n', width=6, command=lambda: press('a'))
+    A.grid(row=3, column=0, ipadx=6, ipady=10, sticky="nsew")
+    S = ttk.Button(framekey, text='\nS\n', width=6, command=lambda: press('s'))
+    S.grid(row=3, column=1, ipadx=6, ipady=10, sticky="nsew")
+    D = ttk.Button(framekey, text='\nD\n', width=6, command=lambda: press('d'))
+    D.grid(row=3, column=2, ipadx=6, ipady=10, sticky="nsew")
+    F = ttk.Button(framekey, text='\nF\n', width=6, command=lambda: press('f'))
+    F.grid(row=3, column=3, ipadx=6, ipady=10, sticky="nsew")
+    G = ttk.Button(framekey, text='\nG\n', width=6, command=lambda: press('g'))
+    G.grid(row=3, column=4, ipadx=6, ipady=10, sticky="nsew")
+    H = ttk.Button(framekey, text='\nH\n', width=6, command=lambda: press('h'))
+    H.grid(row=3, column=5, ipadx=6, ipady=10, sticky="nsew")
+    J = ttk.Button(framekey, text='\nJ\n', width=6, command=lambda: press('j'))
+    J.grid(row=3, column=6, ipadx=6, ipady=10, sticky="nsew")
+    K = ttk.Button(framekey, text='\nK\n', width=6, command=lambda: press('k'))
+    K.grid(row=3, column=7, ipadx=6, ipady=10, sticky="nsew")
+    L = ttk.Button(framekey, text='\nL\n', width=6, command=lambda: press('l'))
+    L.grid(row=3, column=8, ipadx=6, ipady=10, sticky="nsew")
+    minus = ttk.Button(framekey, text='\nBackspace\n', width=6, command=Backspace)
+    minus.grid(row=3, column=9, ipadx=6, ipady=10, sticky="nsew")
+    # Fourth Line Buttons
+    Z = ttk.Button(framekey, text='\nZ\n', width=6, command=lambda: press('z'))
+    Z.grid(row=4, column=0, ipadx=6, ipady=10, sticky="nsew")
+    X = ttk.Button(framekey, text='\nX\n', width=6, command=lambda: press('x'))
+    X.grid(row=4, column=1, ipadx=6, ipady=10, sticky="nsew")
+    C = ttk.Button(framekey, text='\nC\n', width=6, command=lambda: press('c'))
+    C.grid(row=4, column=2, ipadx=6, ipady=10, sticky="nsew")
+    V = ttk.Button(framekey, text='\nV\n', width=6, command=lambda: press('v'))
+    V.grid(row=4, column=3, ipadx=6, ipady=10, sticky="nsew")
+    B = ttk.Button(framekey, text='\nB\n', width=6, command=lambda: press('b'))
+    B.grid(row=4, column=4, ipadx=6, ipady=10, sticky="nsew")
+    N = ttk.Button(framekey, text='\nN\n', width=6, command=lambda: press('n'))
+    N.grid(row=4, column=5, ipadx=6, ipady=10, sticky="nsew")
+    M = ttk.Button(framekey, text='\nM\n', width=6, command=lambda: press('m'))
+    M.grid(row=4, column=6, ipadx=6, ipady=10, sticky="nsew")
+    space = ttk.Button(framekey, text='\nSpace\n', width=6, command=lambda: press(' '))
+    space.grid(row=4, column=7, ipadx=6, ipady=10, sticky="nsew")
+    enter = ttk.Button(framekey, text='\nEnter\n', width=6, command=action)
+    enter.grid(row=4, column=8, ipadx=6, ipady=10, sticky="nsew")
+    backspace = ttk.Button(framekey, text='\nClear\n', width=6, command=Clear)
+    backspace.grid(row=4, column=9, ipadx=6, ipady=10, sticky="nsew")
+    framekey.pack()
+    key.mainloop()
+
+
+# location frame stuff
+labelloc = Label(frameloc, text="Where are you going?", font=('Helvetica 31 underline'))
+labelloc.grid(rowspan=1, columnspan=100)
+btnbr = Button(frameloc, text="Bathroom", command=click2, width=6, font=('Helvetica', 25))
+btnbr.grid(row=1, column=3, ipadx=15, ipady=5)
+btnm = Button(frameloc, text="Media", command=click3, width=6, font=('Helvetica', 25))
+btnm.grid(row=2, column=5, ipadx=15, ipady=5)
+btno = Button(frameloc, text="Office", command=click4, width=6, font=('Helvetica', 25))
+btno.grid(row=4, column=5, ipadx=15, ipady=5)
+btnn = Button(frameloc, text="Nurse", command=click5, width=6, font=('Helvetica', 25))
+btnn.grid(row=4, column=1, ipadx=15, ipady=5)
+btnc = Button(frameloc, text="Counselor", command=click6, width=6, font=('Helvetica', 25))
+btnc.grid(row=2, column=1, ipadx=15, ipady=5)
+btnoth = Button(frameloc, text="Other", command=click7, width=6, font=('Helvetica', 25))
+btnoth.grid(row=6, column=2, ipadx=15, ipady=5)
+btnback = Button(frameloc, text="Back", command=click8, width=6, font=('Helvetica', 25))
+btnback.grid(row=6, column=4, ipadx=15, ipady=5)
+
+logo = key.python_image = tk.PhotoImage(file="C:\\Users\\jzgc3\\Desktop\\SpeedPass.PNG")
+ttk.Label(frameloc, image=logo).grid(row=3, column=2, columnspan=3, sticky=tk.S)
+
+
+display()
